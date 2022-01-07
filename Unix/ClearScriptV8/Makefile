@@ -76,8 +76,9 @@ ifeq ($(TARGETOS), linux)
         TARGETSTDLIB = musl
         CXXALPINEFLAGS = --sysroot=/usr/lib/x86_64-linux-musl/
         LDALPINEFLAGS = -L/lib/x86_64-linux-musl/ -L/lib/
+        TARGETOS = alpine-linux
     endif
-    TARGET = $(TARGETARCH)-alpine-$(TARGETOS)-$(TARGETSTDLIB)$(TARGETSUFFIX)
+    TARGET = $(TARGETARCH)-$(TARGETOS)-$(TARGETSTDLIB)$(TARGETSUFFIX)
     ifndef DEBUG
         CXXLINKFLAGS := -s
     endif
@@ -113,10 +114,8 @@ OBJDIR = $(OUTDIR)/obj/$(CPU)
 CLEARSCRIPTV8 = $(OUTDIR)/ClearScriptV8.$(OS)-$(CPU).$(EXTENSION)
 
 
-#CC="musl-gcc -static" make -f Unix/Makefile DEBUG=1
 CXX = clang++
 CXXFLAGS = --target=$(TARGET) -std=c++17 -fvisibility=default -fPIC -fno-rtti -Wno-ignored-attributes $(CXXCONFIGFLAGS) -I$(V8INCDIR) $(CXXCROSSFLAGS)
-#CXXFLAGS = $(TARGET) -std=c++17 -fvisibility=default -fPIC -fno-rtti -Wno-ignored-attributes $(CXXCONFIGFLAGS) -I$(V8INCDIR) $(CXXCROSSFLAGS) -specs /usr/lib/x86_64-linux-musl/musl-gcc.specs
 
 HEADERS = $(wildcard $(SRCDIR)/*.h)
 OBJECTS = \
