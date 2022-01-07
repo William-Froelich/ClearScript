@@ -25,6 +25,7 @@ else ifeq ($(KERNEL), Linux)
     TARGETARCH_ARM = arm
     TARGETARCH_ARM64 = aarch64
     MAKELINUX = make
+    STDLIB = musl
 else
     $(error unsupported operating system '$(KERNEL)')
 endif
@@ -65,9 +66,19 @@ else
     $(error unsupported target CPU '$(CPU)')
 endif
 
+
+
 STRIP = true
 ifeq ($(TARGETOS), linux)
-    TARGET = $(TARGETARCH)-$(TARGETOS)-gnu$(TARGETSUFFIX)
+    ifeq ($(STDLIB), gnu)
+        TARGETSTDLIB = gnu
+    else
+        TARGETSTDLIB = musl
+        CXXALPINEFLAGS = --sysroot=/usr/lib/x86_64-linux-musl/
+        LDALPINEFLAGS = -L/lib/x86_64-linux-musl/ -L/lib/
+        TARGETOS = alpine-linux
+    endif
+    TARGET = $(TARGETARCH)-$(TARGETOS)-$(TARGETSTDLIB)$(TARGETSUFFIX)
     ifndef DEBUG
         CXXLINKFLAGS := -s
     endif
@@ -102,6 +113,7 @@ OUTDIR = $(ROOTDIR)/bin/$(CONFIG)/Unix
 OBJDIR = $(OUTDIR)/obj/$(CPU)
 CLEARSCRIPTV8 = $(OUTDIR)/ClearScriptV8.$(OS)-$(CPU).$(EXTENSION)
 
+
 CXX = clang++
 CXXFLAGS = --target=$(TARGET) -std=c++17 -fvisibility=default -fPIC -fno-rtti -Wno-ignored-attributes $(CXXCONFIGFLAGS) -I$(V8INCDIR) $(CXXCROSSFLAGS)
 
@@ -131,7 +143,7 @@ objdir:
 	@mkdir -p $(OBJDIR)
 
 $(CLEARSCRIPTV8): $(V8LIBDIR)/libv8_monolith.a $(OBJECTS)
-	$(CXX) $(CXXFLAGS) $(CXXLINKFLAGS) --shared -L$(V8LIBDIR) $(OBJECTS) -o $@ -pthread -lv8_monolith && $(STRIP) $@
+	$(CXX) $(CXXFLAGS) $(CXXLINKFLAGS) --shared $(LDALPINEFLAGS) -L$(V8LIBDIR) $(OBJECTS) -o $@ -pthread -lv8_monolith && $(STRIP) $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
